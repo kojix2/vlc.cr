@@ -1,2 +1,2 @@
 require "spec"
-require "../src/Vlc"
+require "../src/vlc"
