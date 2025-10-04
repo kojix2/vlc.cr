@@ -55,7 +55,6 @@ jobs:
         run: crystal spec
 
       - name: Build example
-        if: ${{ runner.os != 'Windows' }}
         run: crystal build examples/play_file.cr
 
   build_MinGW64:
@@ -85,4 +84,4 @@ jobs:
       - name: Build example (play_bbc_vlc_cli)
         shell: msys2 {0}
         run: |
-          crystal build examples/play_bbc_vlc_cli.cr
+          crystal build examples/play_file.cr
