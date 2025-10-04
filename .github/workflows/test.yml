@@ -48,6 +48,71 @@ jobs:
           # Sanity check
           Get-ChildItem 'C:\Program Files\VideoLAN\VLC' -Filter 'libvlc*' -Recurse | Select-Object FullName
 
+      - name: Download VLC SDK libraries (Windows)
+        if: startsWith(runner.os, 'Windows')
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $vlcDir = 'C:\Program Files\VideoLAN\VLC'
+          if (-not (Test-Path $vlcDir)) {
+            throw "VLC directory not found at $vlcDir"
+          }
+
+          $versionRaw = (Get-Item "$vlcDir\vlc.exe").VersionInfo.ProductVersion
+          if (-not $versionRaw) {
+            throw 'Failed to detect VLC version'
+          }
+          Write-Host "Detected VLC version: $versionRaw"
+
+          $candidateVersions = @($versionRaw)
+          $parted = $versionRaw.Split('.')
+          if ($parted.Length -gt 3) {
+            $candidateVersions += ($parted[0..2] -join '.')
+          }
+          if ($versionRaw.Contains('+')) {
+            $candidateVersions += $versionRaw.Split('+')[0]
+          }
+          $candidateVersions = $candidateVersions | Select-Object -Unique
+
+          $downloaded = $false
+          $zipPath = Join-Path $env:RUNNER_TEMP 'vlc-sdk.zip'
+          foreach ($ver in $candidateVersions) {
+            $zipName = "vlc-$ver-win64.zip"
+            $uri = "https://download.videolan.org/pub/videolan/vlc/$ver/win64/$zipName"
+            Write-Host "Attempting to download SDK from $uri"
+            try {
+              Invoke-WebRequest -Uri $uri -OutFile $zipPath -UseBasicParsing
+              $downloaded = $true
+              $usedVersion = $ver
+              break
+            } catch {
+              Write-Host "Download failed for $uri"
+            }
+          }
+
+          if (-not $downloaded) {
+            throw "Unable to download VLC SDK matching version $versionRaw"
+          }
+
+          $extractDir = Join-Path $env:RUNNER_TEMP "vlc-sdk-$usedVersion"
+          if (Test-Path $extractDir) { Remove-Item $extractDir -Recurse -Force }
+          Expand-Archive -Path $zipPath -DestinationPath $extractDir -Force
+
+          $libFiles = Get-ChildItem $extractDir -Recurse -Include 'libvlc.lib','libvlccore.lib' -File
+          if (-not $libFiles -or $libFiles.Count -lt 2) {
+            throw 'Downloaded SDK does not contain expected libvlc.lib files'
+          }
+          foreach ($lib in $libFiles) {
+            Write-Host "Copying $($lib.FullName) to $vlcDir"
+            Copy-Item $lib.FullName $vlcDir -Force
+          }
+
+          Add-Content -Path $env:GITHUB_ENV -Value "CRYSTAL_LIBRARY_PATH=$vlcDir"
+          $libEnv = if ($env:LIB) { "$vlcDir;$env:LIB" } else { $vlcDir }
+          Add-Content -Path $env:GITHUB_ENV -Value "LIB=$libEnv"
+
+          Write-Host "Prepared VLC SDK libraries in $vlcDir"
+
       - name: Install shards
         run: shards install
 
@@ -84,4 +149,4 @@ jobs:
       - name: Build example (play_bbc_vlc_cli)
         shell: msys2 {0}
         run: |
-          crystal build examples/play_file.cr
+          crystal build examples/play_bbc_vlc_cli.cr
