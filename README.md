@@ -1,6 +1,10 @@
 # vlc.cr
 
-VLC media player library bindings for Crystal.
+[![test](https://github.com/kojix2/vlc.cr/actions/workflows/test.yml/badge.svg)](https://github.com/kojix2/vlc.cr/actions/workflows/test.yml)
+
+:orange: [VLC](https://www.videolan.org/) media player library - for Crystal :gem:
+
+This project was forked from [data-niklas/vlc](https://github.com/data-niklas/vlc).
 
 ## Installation
 
