@@ -7,12 +7,38 @@ on:
 
 jobs:
   test:
-    runs-on: ubuntu-latest
+    name: crystal spec (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest]
 
     steps:
       - uses: actions/checkout@v5
       - uses: crystal-lang/install-crystal@v1
-      - name: Install dependencies
+
+      - name: Install libVLC (Ubuntu)
+        if: startsWith(runner.os, 'Linux')
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libvlc-dev
+
+      - name: Install libVLC (macOS)
+        if: startsWith(runner.os, 'macOS')
+        run: |
+          brew update
+          # Install VLC app (contains libvlc.dylib & libvlccore.dylib)
+          brew install --cask vlc
+          # Symlink libraries so the linker can find them with -lvlc
+          for d in /usr/local/lib /opt/homebrew/lib; do
+            sudo mkdir -p "$d"
+            sudo ln -sf /Applications/VLC.app/Contents/MacOS/lib/libvlc.dylib "$d/libvlc.dylib"
+            sudo ln -sf /Applications/VLC.app/Contents/MacOS/lib/libvlccore.dylib "$d/libvlccore.dylib"
+          done
+
+      - name: Install shards
         run: shards install
-      - name: Run tests
+
+      - name: Run specs
         run: crystal spec
