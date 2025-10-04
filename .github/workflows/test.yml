@@ -55,4 +55,34 @@ jobs:
         run: crystal spec
 
       - name: Build example
+        if: ${{ runner.os != 'Windows' }}
         run: crystal build examples/play_file.cr
+
+  build_MinGW64:
+    name: MinGW64
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          submodules: recursive
+      - uses: msys2/setup-msys2@v2
+        with:
+          msystem: MINGW64
+          update: true
+          install: >-
+            mingw-w64-x86_64-crystal
+            mingw-w64-x86_64-shards
+            mingw-w64-x86_64-vlc
+            git
+            make
+      - name: Install dependencies
+        shell: msys2 {0}
+        run: shards install
+      - name: Run specs (MinGW)
+        shell: msys2 {0}
+        run: |
+          crystal spec
+      - name: Build example (play_bbc_vlc_cli)
+        shell: msys2 {0}
+        run: |
+          crystal build examples/play_bbc_vlc_cli.cr
