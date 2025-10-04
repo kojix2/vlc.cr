@@ -7,7 +7,7 @@ lib LibVlc
   alias MediaListPlayer = Void*
   alias Media = Void*
   alias MediaList = Void*
-  alias Time = LibC::Int64T
+  alias Time = Int64
   alias EventManager = Void*
   alias EventType = LibC::Int
   alias Callback = Proc(EventData*, Void*, Nil)
@@ -215,7 +215,7 @@ lib LibVlc
     new_state : State # Vars can be read, depending on the event type
     meta_type : Meta
     new_child : Media*
-    new_duration : LibC::Int64T
+    new_duration : Int64
     md : Media*
     p_thumbnail : Picture*
     item : Media*
@@ -278,11 +278,11 @@ lib LibVlc
   end
 
   struct MediaTrack
-    i_codec : LibC::UInt32T
+    i_codec : UInt32
     i_bitrage : LibC::UInt
     psz_language : LibC::Char*
     psz_description : LibC::Char*
-    i_original_fourcc : LibC::UInt32T
+    i_original_fourcc : UInt32
     i_id : LibC::Int
     i_profile : LibC::Int
     i_level : LibC::Int
@@ -302,7 +302,7 @@ lib LibVlc
   fun set_audio_output = libvlc_audio_output_set(media_player : MediaPlayer*, psz_name : LibC::Char*) : LibC::Int
 
   fun get_audio_channel = libvlc_audio_get_channel(media_player : MediaPlayer*) : LibC::Int
-  fun get_audio_delay = libvlc_audio_get_delay(media_player : MediaPlayer*) : LibC::Int64T
+  fun get_audio_delay = libvlc_audio_get_delay(media_player : MediaPlayer*) : Int64
   fun get_audio_mute = libvlc_audio_get_mute(media_player : MediaPlayer*) : LibC::Int
   fun get_audio_track = libvlc_audio_get_track(media_player : MediaPlayer*) : LibC::Int
   fun get_audio_track_count = libvlc_audio_get_track_count(media_player : MediaPlayer*) : LibC::Int
@@ -349,7 +349,7 @@ lib LibVlc
   fun free_media_tracks = libvlc_media_tracks_release(tracks : MediaTrack**, count : LibC::UInt)
   fun get_media_type = libvlc_media_get_type(media : Media*) : MediaType
   fun get_media_state = libvlc_media_get_state(media : Media*) : State
-  fun get_media_codec_description = libvlc_media_get_codec_description(track_type : TrackType, codec : LibC::UInt32T) : LibC::Char*
+  fun get_media_codec_description = libvlc_media_get_codec_description(track_type : TrackType, codec : UInt32) : LibC::Char*
   fun get_media_statistics = libvlc_media_get_stats(media : Media*, stats : MediaStats*) : Bool # The Vlc_Media_Stats struct might be changed by the vlc lib (if true was returned)
   fun get_media_parsed_status = libvlc_media_get_parsed_status(media : Media*) : MediaParsedStatus
   fun get_media_subitems = libvlc_media_subitems(media : Media*) : MediaList*
@@ -403,7 +403,7 @@ lib LibVlc
   fun set_audio_volume_callback = libvlc_audio_set_volume_callback(media_player : MediaPlayer*, callback : AudioVolumeCallback)
 
   fun set_audio_channel = libvlc_audio_set_channel(media_player : MediaPlayer*, channel : LibC::Int) : LibC::Int
-  fun set_audio_delay = libvlc_audio_set_delay(media_player : MediaPlayer*, delay : LibC::Int64T) : LibC::Int # delay in microseconds
+  fun set_audio_delay = libvlc_audio_set_delay(media_player : MediaPlayer*, delay : Int64) : LibC::Int # delay in microseconds
   fun set_audio_mute = libvlc_audio_set_mute(media_player : MediaPlayer*, status : LibC::Int)                 # Not reliable!
   fun set_audio_track = libvlc_audio_set_track(media_player : MediaPlayer*, track : LibC::Int) : LibC::Int
   fun set_audio_volume = libvlc_audio_set_volume(media_player : MediaPlayer*, volume : LibC::Int) : LibC::Int # volume in percent --> between 0 and 100 (inclusive)
@@ -466,10 +466,10 @@ lib LibVlc
   fun set_media_player_time = libvlc_media_player_set_time(media_player : MediaPlayer*, time : Time, fast_seeking : Bool) : LibC::Int
   fun stop_media_player = libvlc_media_player_stop(media_player : MediaPlayer*)
 
-  fun set_media_player_xwindow = libvlc_media_player_set_xwindow(mp : MediaPlayer*, id : LibC::UInt32T)
+  fun set_media_player_xwindow = libvlc_media_player_set_xwindow(mp : MediaPlayer*, id : UInt32)
   fun set_media_player_hwnd = libvlc_media_player_set_hwnd(mp : MediaPlayer*, hwnd : Void*)
   fun set_media_player_nsobject = libvlc_media_player_set_nsobject(mp : MediaPlayer*, nsobject : Void*)
-  fun get_media_player_xwindow = libvlc_media_player_get_xwindow(mp : MediaPlayer*) : LibC::UInt32T
+  fun get_media_player_xwindow = libvlc_media_player_get_xwindow(mp : MediaPlayer*) : UInt32
   fun get_media_player_hwnd = libvlc_media_player_get_hwnd(mp : MediaPlayer*) : Void*
   fun get_media_player_nsobject = libvlc_media_player_get_nsobject(mp : MediaPlayer*) : Void*
 end
