@@ -1,5 +1,7 @@
 require "../src/vlc"
 
+LibVLC = VLC::LibVLC
+
 unless ARGV.size == 1
   puts "Usage: crystal run examples/play_file.cr -- <file_path>"
   exit 1
@@ -20,7 +22,7 @@ player = LibVLC.new_media_player_from_media(media)
 
 LibVLC.play_media_player(player)
 
-while LibVLC.get_media_player_state(player) != LibVLC::State::Ended
+while LibVLC.get_media_player_state(player) != VLC::LibVLC::State::Ended
   sleep 1.second
 end
 

@@ -23,6 +23,8 @@ Run `shards install`
 ```crystal
 require "vlc"
 
+LibVLC = VLC::LibVLC
+
 # Create VLC instance
 instance = LibVLC.new_instance(0, nil)
 
