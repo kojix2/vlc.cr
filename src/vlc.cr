@@ -1,7 +1,5 @@
 require "./vlc/libvlc.cr"
 
-module Vlc
-  VERSION = "0.1.7"
-
-  # TODO: Put your code here
+module VLC
+  VERSION = {{ `shards version #{__DIR__}`.chomp.stringify }}
 end

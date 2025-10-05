@@ -14,16 +14,16 @@ end
 
 puts "Playing: #{file_path}"
 
-instance = LibVlc.new_instance(0, Pointer(LibC::Char).null)
-media = LibVlc.new_media_from_path(instance, file_path)
-player = LibVlc.new_media_player_from_media(media)
+instance = LibVLC.new_instance(0, Pointer(LibC::Char).null)
+media = LibVLC.new_media_from_path(instance, file_path)
+player = LibVLC.new_media_player_from_media(media)
 
-LibVlc.play_media_player(player)
+LibVLC.play_media_player(player)
 
-while LibVlc.get_media_player_state(player) != LibVlc::State::Ended
+while LibVLC.get_media_player_state(player) != LibVLC::State::Ended
   sleep 1.second
 end
 
-LibVlc.free_media_player(player)
-LibVlc.free_media(media)
-LibVlc.free_instance(instance)
+LibVLC.free_media_player(player)
+LibVLC.free_media(media)
+LibVLC.free_instance(instance)
