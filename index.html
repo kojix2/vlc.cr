@@ -57,8 +57,8 @@
   <div class="types-list">
     <ul>
   
-  <li class=" " data-id="vlc/Vlc" data-name="vlc">
-      <a href="Vlc.html">Vlc</a>
+  <li class=" " data-id="vlc/VLC" data-name="vlc">
+      <a href="VLC.html">VLC</a>
       
     </li>
   
@@ -94,21 +94,21 @@
 <pre><code class="language-crystal"><span class="k">require</span> <span class="s">&quot;vlc&quot;</span>
 
 <span class="c"># Create VLC instance</span>
-instance <span class="o">=</span> <span class="t">LibVlc</span>.new_instance(<span class="n">0</span>, <span class="n">nil</span>)
+instance <span class="o">=</span> <span class="t">LibVLC</span>.new_instance(<span class="n">0</span>, <span class="n">nil</span>)
 
 <span class="c"># Create media from file</span>
-media <span class="o">=</span> <span class="t">LibVlc</span>.new_media_from_path(instance, <span class="s">&quot;path/to/video.mp4&quot;</span>)
+media <span class="o">=</span> <span class="t">LibVLC</span>.new_media_from_path(instance, <span class="s">&quot;path/to/video.mp4&quot;</span>)
 
 <span class="c"># Create media player</span>
-player <span class="o">=</span> <span class="t">LibVlc</span>.new_media_player_from_media(media)
+player <span class="o">=</span> <span class="t">LibVLC</span>.new_media_player_from_media(media)
 
 <span class="c"># Play</span>
-<span class="t">LibVlc</span>.play_media_player(player)
+<span class="t">LibVLC</span>.play_media_player(player)
 
 <span class="c"># Cleanup</span>
-<span class="t">LibVlc</span>.free_media_player(player)
-<span class="t">LibVlc</span>.free_media(media)
-<span class="t">LibVlc</span>.free_instance(instance)</code></pre>
+<span class="t">LibVLC</span>.free_media_player(player)
+<span class="t">LibVLC</span>.free_media(media)
+<span class="t">LibVLC</span>.free_instance(instance)</code></pre>
 <h2><a id="license" class="anchor" href="#license">
   <svg class="octicon-link" aria-hidden="true">
     <use href="#octicon-link"/>
