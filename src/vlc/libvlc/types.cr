@@ -21,6 +21,20 @@ module VLC
     alias AudioVolumeCallback = Proc(Void*, LibC::Float, Bool, Nil)
     alias AudioSetupCallback = Proc(Void**, LibC::Char*, LibC::UInt*, LibC::UInt*, LibC::Int)
 
+    # Video callbacks
+    # void *(*libvlc_video_lock_cb)(void *opaque, void **planes);
+    alias VideoLockCallback = Proc(Void*, Void**, Void*)
+    # void (*libvlc_video_unlock_cb)(void *opaque, void *picture, void *const *planes);
+    alias VideoUnlockCallback = Proc(Void*, Void*, Void**, Nil)
+    # void (*libvlc_video_display_cb)(void *opaque, void *picture);
+    alias VideoDisplayCallback = Proc(Void*, Void*, Nil)
+    # unsigned (*libvlc_video_format_cb)(void **opaque, char *chroma,
+    #                                    unsigned *width, unsigned *height,
+    #                                    unsigned *pitches, unsigned *lines);
+    alias VideoFormatCallback = Proc(Void**, LibC::Char*, LibC::UInt*, LibC::UInt*, LibC::UInt*, LibC::UInt*, LibC::UInt)
+    # void (*libvlc_video_cleanup_cb)(void *opaque);
+    alias VideoCleanupCallback = Proc(Void*, Nil)
+
     alias Picture = Void*
     alias Equalizer = Void*
     alias Log = Void
