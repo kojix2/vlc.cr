@@ -16,7 +16,9 @@ end
 
 puts "Playing: #{file_path}"
 
-instance = LibVLC.new_instance(0, Pointer(LibC::Char).null)
+# No CLI options passed to libVLC
+argv = Pointer(Pointer(LibC::Char)).null
+instance = LibVLC.new_instance(0, argv)
 media = LibVLC.new_media_from_path(instance, file_path)
 player = LibVLC.new_media_player_from_media(media)
 
