@@ -12,14 +12,14 @@ module VLC
     alias EventManager = Void*
     alias EventType = LibC::Int
     alias Callback = Proc(EventData*, Void*, Nil)
-    alias AudioPlayCallback = Proc(Void*, Void*, LibC::UInt, UInt64, Nil)
-    alias AudioPauseCallback = Proc(Void*, UInt64, Nil)
-    alias AudioResumeCallback = Proc(Void*, UInt64, Nil)
-    alias AudioFlushCallback = Proc(Void*, UInt64, Nil)
+    alias AudioPlayCallback = Proc(Void*, Void*, LibC::UInt, Int64, Nil)
+    alias AudioPauseCallback = Proc(Void*, Int64, Nil)
+    alias AudioResumeCallback = Proc(Void*, Int64, Nil)
+    alias AudioFlushCallback = Proc(Void*, Int64, Nil)
     alias AudioDrainCallback = Proc(Void*, Nil)
     alias AudioCleanupCallback = Proc(Void*, Nil)
     alias AudioVolumeCallback = Proc(Void*, LibC::Float, Bool, Nil)
-    alias AudioSetupCallback = Proc(Void**, LibC::Char*, LibC::UInt, LibC::UInt, Nil)
+    alias AudioSetupCallback = Proc(Void**, LibC::Char*, LibC::UInt*, LibC::UInt*, LibC::Int)
     alias Picture = Void*
     alias Equalizer = Void*
     alias MediaThumbnailRequest = Void*
@@ -45,10 +45,10 @@ module VLC
     end
 
     enum TrackType
-      Unknown
-      Audio
-      Video
-      Text
+      Unknown = -1
+      Audio   =  0
+      Video   =  1
+      Text    =  2
     end
 
     enum PlaybackMode
@@ -87,10 +87,10 @@ module VLC
     end
 
     enum MediaParsedStatus
-      Skipped
-      Failed
-      Timeout
-      Done
+      Skipped = 1
+      Failed  = 2
+      Timeout = 3
+      Done    = 4
     end
 
     enum Event
@@ -173,12 +173,13 @@ module VLC
       Accessibility
     end
 
+    @[Flags]
     enum MediaParseFlag
-      ParseLocal
-      ParseNetwork
-      FetchLocal
-      FetchNetwork
-      DoInteract
+      ParseLocal   = 0x00
+      ParseNetwork = 0x01
+      FetchLocal   = 0x02
+      FetchNetwork = 0x04
+      DoInteract   = 0x08
     end
 
     enum SlaveType
@@ -192,18 +193,32 @@ module VLC
     end
 
     struct MediaStats
+      # Input
       i_read_bytes : LibC::Int
       f_input_bitrate : LibC::Float
+
+      # Demux
       i_demux_read_bytes : LibC::Int
       f_demux_bitrate : LibC::Float
       i_demux_corrupted : LibC::Int
       i_demux_discontinuity : LibC::Int
+
+      # Decoders
       i_decoded_video : LibC::Int
       i_decoded_audio : LibC::Int
+
+      # Video Output
       i_displayed_pictures : LibC::Int
       i_lost_pictures : LibC::Int
+
+      # Audio output
       i_played_abuffers : LibC::Int
       i_lost_abuffers : LibC::Int
+
+      # Stream output
+      i_sent_packets : LibC::Int
+      i_sent_bytes : LibC::Int
+      f_send_bitrate : LibC::Float
     end
 
     struct EventData
@@ -218,7 +233,6 @@ module VLC
       new_child : Media*
       new_duration : Int64
       md : Media*
-      p_thumbnail : Picture*
       item : Media*
       new_status : LibC::Int
       new_cache : LibC::Float
@@ -231,13 +245,16 @@ module VLC
       new_scrambled : LibC::Int
       new_count : LibC::Int
       index : LibC::Int
-      psz_filename : LibC::Char*
       new_length : Time
       new_media : Media*
       i_type : TrackType
       i_id : LibC::Int
       volume : LibC::Float
       device : LibC::Char*
+      # Additional fields to match max union size in libvlc_event_t
+      psz_filename : LibC::Char*
+      psz_instance_name : LibC::Char*
+      renderer_item : Void*
     end
 
     struct AudioOutput
@@ -273,26 +290,51 @@ module VLC
       psz_encoding : LibC::Char*
     end
 
+    struct VideoViewpoint
+      f_yaw : LibC::Float
+      f_pitch : LibC::Float
+      f_roll : LibC::Float
+      f_field_of_view : LibC::Float
+    end
+
+    struct VideoTrack
+      i_height : LibC::UInt
+      i_width : LibC::UInt
+      i_sar_num : LibC::UInt
+      i_sar_den : LibC::UInt
+      i_frame_rate_num : LibC::UInt
+      i_frame_rate_den : LibC::UInt
+      i_orientation : LibC::Int
+      i_projection : LibC::Int
+      pose : VideoViewpoint
+    end
+
     union TrackUnion
-      audio : AudioTrack
-      subtitle : SubtitleTrack
+      audio : AudioTrack*
+      video : VideoTrack*
+      subtitle : SubtitleTrack*
     end
 
     struct MediaTrack
+      # Codec fourcc
       i_codec : UInt32
-      i_bitrage : LibC::UInt
-      psz_language : LibC::Char*
-      psz_description : LibC::Char*
       i_original_fourcc : UInt32
       i_id : LibC::Int
+      i_type : TrackType
+
+      # Codec specific
       i_profile : LibC::Int
       i_level : LibC::Int
-      i_type : TrackType
+
       track : TrackUnion
+
+      i_bitrate : LibC::UInt
+      psz_language : LibC::Char*
+      psz_description : LibC::Char*
     end
 
     # Main and instance
-    fun new_instance = libvlc_new(arguments_count : LibC::Int, arguments : LibC::Char*) : Instance*
+    fun new_instance = libvlc_new(arguments_count : LibC::Int, arguments : LibC::Char**) : Instance*
     fun free = libvlc_free(Void*)
     fun free_instance = libvlc_release(instance : Instance*)
     fun version = libvlc_get_version : LibC::Char*
@@ -351,7 +393,7 @@ module VLC
     fun get_media_type = libvlc_media_get_type(media : Media*) : MediaType
     fun get_media_state = libvlc_media_get_state(media : Media*) : State
     fun get_media_codec_description = libvlc_media_get_codec_description(track_type : TrackType, codec : UInt32) : LibC::Char*
-    fun get_media_statistics = libvlc_media_get_stats(media : Media*, stats : MediaStats*) : Bool # The VLC_Media_Stats struct might be changed by the vlc lib (if true was returned)
+    fun get_media_statistics = libvlc_media_get_stats(media : Media*, stats : MediaStats*) : LibC::Int # The VLC_Media_Stats struct might be changed by the vlc lib (if non-zero was returned)
     fun get_media_parsed_status = libvlc_media_get_parsed_status(media : Media*) : MediaParsedStatus
     fun get_media_subitems = libvlc_media_subitems(media : Media*) : MediaList*
     fun request_media_thumbnail_by_pos = libvlc_media_thumbnail_request_by_pos(media : Media*, pos : LibC::Float, speed : ThumbnailSeekSpeed, width : LibC::UInt, height : LibC::UInt, crop : Bool, picture_type : PictureType, timeout : Time) : MediaThumbnailRequest*
@@ -367,7 +409,7 @@ module VLC
 
     fun get_media_meta = libvlc_media_get_meta(media : Media*, meta : Meta) : LibC::Char*
     fun set_media_meta = libvlc_media_set_meta(media : Media*, meta : Meta, value : LibC::Char*)
-    fun save_media_meta = libvlc_media_save_meta(media : Media*) : Bool
+    fun save_media_meta = libvlc_media_save_meta(media : Media*) : LibC::Int
 
     fun add_media_option = libvlc_media_add_option(media : Media*, option : LibC::Char*)
     fun add_media_option_flag = libvlc_media_add_option_flag(media : Media*, option : LibC::Char*, flags : LibC::Int)
@@ -386,8 +428,8 @@ module VLC
     fun lock_media_list = libvlc_media_list_lock(media_list : MediaList*)
 
     fun remove_media_list_media = libvlc_media_list_remove_index(media_list : MediaList*, pos : LibC::Int) : LibC::Int
-    fun get_media_list_media = libvlc_media_list_item_at_index(media_list : MediaList*, pos : LibC::Int) : Media*
-    fun is_media_list_readonly? = libvlc_media_list_is_readonly(media_list : MediaList*) : Bool
+    fun get_media_list_item_at_index = libvlc_media_list_item_at_index(media_list : MediaList*, pos : LibC::Int) : Media*
+    fun is_media_list_readonly? = libvlc_media_list_is_readonly(media_list : MediaList*) : LibC::Int
     fun index_of_media_list_media = libvlc_media_list_index_of_item(media_list : MediaList*, media : Media*) : LibC::Int
     fun insert_media_list_media = libvlc_media_list_insert_media(media_list : MediaList*, media : Media*, pos : LibC::Int) : LibC::Int
     fun add_media_list_media = libvlc_media_list_add_media(media_list : MediaList*, media : Media*) : LibC::Int
@@ -413,10 +455,10 @@ module VLC
     fun set_media_player_media = libvlc_media_player_set_media(media_player : MediaPlayer*, media : Media*)
     fun get_media_player_media = libvlc_media_player_get_media(media_player : MediaPlayer*) : Media*
 
-    fun can_media_player_pause? = libvlc_media_player_can_pause(media_player : MediaPlayer*) : Bool
-    fun is_media_player_playing? = libvlc_media_player_is_playing(media_player : MediaPlayer*) : Bool
-    fun is_media_player_seekable? = libvlc_media_player_is_seekable(media_player : MediaPlayer*) : Bool
-    fun is_media_player_program_scrambled? = libvlc_media_player_program_scrambled(media_player : MediaPlayer*) : Bool
+    fun can_media_player_pause? = libvlc_media_player_can_pause(media_player : MediaPlayer*) : LibC::Int
+    fun is_media_player_playing? = libvlc_media_player_is_playing(media_player : MediaPlayer*) : LibC::Int
+    fun is_media_player_seekable? = libvlc_media_player_is_seekable(media_player : MediaPlayer*) : LibC::Int
+    fun is_media_player_program_scrambled? = libvlc_media_player_program_scrambled(media_player : MediaPlayer*) : LibC::Int
 
     fun get_media_player_length = libvlc_media_player_get_length(media_player : MediaPlayer*) : Time
     fun get_media_player_position = libvlc_media_player_get_position(media_player : MediaPlayer*) : LibC::Float
@@ -447,14 +489,14 @@ module VLC
 
     fun get_media_list_player_media_player = libvlc_media_list_player_get_media_player(mlp : MediaListPlayer*) : MediaPlayer*
     fun get_media_list_player_state = libvlc_media_list_player_get_state(mlp : MediaListPlayer*) : State
-    fun is_media_list_player_playing? = libvlc_media_list_player_is_playing(mlp : MediaListPlayer*) : Bool
+    fun is_media_list_player_playing? = libvlc_media_list_player_is_playing(mlp : MediaListPlayer*) : LibC::Int
 
     # Events
     fun get_media_event_manager = libvlc_media_event_manager(media : Media*) : EventManager*
     fun get_media_player_event_manager = libvlc_media_player_event_manager(media_player : MediaPlayer*) : EventManager*
     fun get_media_list_event_manager = libvlc_media_list_event_manager(media_list : MediaList*) : EventManager*
     fun get_media_list_player_event_manager = libvlc_media_list_player_event_manager(media_list_player : MediaListPlayer*) : EventManager*
-    fun attach_event = libvlc_event_attach(event_manager : EventManager*, event_type : EventType, callback : Callback, user_data : Void*)
+    fun attach_event = libvlc_event_attach(event_manager : EventManager*, event_type : EventType, callback : Callback, user_data : Void*) : LibC::Int
     fun detach_event = libvlc_event_detach(event_manager : EventManager*, event_type : EventType, callback : Callback, user_data : Void*)
 
     # Direct MediaPlayer control
@@ -462,9 +504,9 @@ module VLC
     fun pause_media_player = libvlc_media_player_pause(player : MediaPlayer*)
     fun next_media_player_frame = libvlc_media_player_next_frame(media_player : MediaPlayer*)
     fun set_media_player_pause = libvlc_media_player_set_pause(media_player : MediaPlayer*, do_pause : LibC::Int) # Play / Resume == 0 , Pause != 0
-    fun set_media_player_position = libvlc_media_player_set_position(media_player : MediaPlayer*, position : LibC::Float, fast_seeking : Bool) : LibC::Int
+    fun set_media_player_position = libvlc_media_player_set_position(media_player : MediaPlayer*, position : LibC::Float)
     fun set_media_player_rate = libvlc_media_player_set_rate(media_player : MediaPlayer*, rate : LibC::Float) : LibC::Int
-    fun set_media_player_time = libvlc_media_player_set_time(media_player : MediaPlayer*, time : Time, fast_seeking : Bool) : LibC::Int
+    fun set_media_player_time = libvlc_media_player_set_time(media_player : MediaPlayer*, time : Time)
     fun stop_media_player = libvlc_media_player_stop(media_player : MediaPlayer*)
 
     fun set_media_player_xwindow = libvlc_media_player_set_xwindow(mp : MediaPlayer*, id : UInt32)
