@@ -37,6 +37,12 @@ jobs:
             sudo ln -sf /Applications/VLC.app/Contents/MacOS/lib/libvlccore.dylib "$d/libvlccore.dylib"
           done
 
+      - name: Configure dyld library path (macOS)
+        if: startsWith(runner.os, 'macOS')
+        run: |
+          echo "DYLD_LIBRARY_PATH=/Applications/VLC.app/Contents/MacOS/lib:/opt/homebrew/lib:/usr/local/lib" >> "$GITHUB_ENV"
+          echo "DYLD_FALLBACK_LIBRARY_PATH=/Applications/VLC.app/Contents/MacOS/lib:/opt/homebrew/lib:/usr/local/lib" >> "$GITHUB_ENV"
+
       - name: Install shards
         run: shards install
 
