@@ -1,7 +1,6 @@
 require "./types"
 
 module VLC
-  @[Link("vlc")]
   lib LibVLC
     # Media player
     fun new_media_player = libvlc_media_player_new(instance : Instance*) : MediaPlayer*

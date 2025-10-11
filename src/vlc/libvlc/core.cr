@@ -1,7 +1,6 @@
 require "./types"
 
 module VLC
-  @[Link("vlc")]
   lib LibVLC
     # Instance and core utils
     fun new_instance = libvlc_new(arguments_count : LibC::Int, arguments : LibC::Char**) : Instance*

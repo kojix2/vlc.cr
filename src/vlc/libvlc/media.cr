@@ -1,7 +1,6 @@
 require "./types"
 
 module VLC
-  @[Link("vlc")]
   lib LibVLC
     # Media
     fun new_media_from_path = libvlc_media_new_path(instance : Instance*, path : LibC::Char*) : Media*
