@@ -37,13 +37,15 @@ module VLC
 
     # Media custom input callbacks (libvlc_media_new_callbacks)
     # int (*libvlc_media_open_cb)(void *opaque, void **datap, uint64_t *sizep);
-    alias MediaOpenCallback = Proc(Void*, Void**, LibC::UInt64T*, LibC::Int)
+    alias MediaOpenCallback = Proc(Void*, Void**, UInt64*, LibC::Int)
 
     # ssize_t (*libvlc_media_read_cb)(void *opaque, unsigned char *buf, size_t len);
-    alias MediaReadCallback = Proc(Void*, LibC::Char*, LibC::SizeT, LibC::Long)
+    # Portable ssize_t alias: Crystal doesn't expose LibC::SSizeT on all targets
+    alias SSIZE_T = LibC::Long
+    alias MediaReadCallback = Proc(Void*, LibC::Char*, LibC::SizeT, SSIZE_T)
 
     # int (*libvlc_media_seek_cb)(void *opaque, uint64_t offset);
-    alias MediaSeekCallback = Proc(Void*, LibC::UInt64T, LibC::Int)
+    alias MediaSeekCallback = Proc(Void*, UInt64, LibC::Int)
 
     # void (*libvlc_media_close_cb)(void *opaque);
     alias MediaCloseCallback = Proc(Void*, Nil)
