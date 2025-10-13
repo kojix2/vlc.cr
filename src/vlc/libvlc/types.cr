@@ -35,9 +35,26 @@ module VLC
     # void (*libvlc_video_cleanup_cb)(void *opaque);
     alias VideoCleanupCallback = Proc(Void*, Nil)
 
+    # Media custom input callbacks (libvlc_media_new_callbacks)
+    # int (*libvlc_media_open_cb)(void *opaque, void **datap, uint64_t *sizep);
+    alias MediaOpenCallback = Proc(Void*, Void**, LibC::UInt64T*, LibC::Int)
+
+    # ssize_t (*libvlc_media_read_cb)(void *opaque, unsigned char *buf, size_t len);
+    alias MediaReadCallback = Proc(Void*, LibC::Char*, LibC::SizeT, LibC::Long)
+
+    # int (*libvlc_media_seek_cb)(void *opaque, uint64_t offset);
+    alias MediaSeekCallback = Proc(Void*, LibC::UInt64T, LibC::Int)
+
+    # void (*libvlc_media_close_cb)(void *opaque);
+    alias MediaCloseCallback = Proc(Void*, Nil)
+
     alias Picture = Void*
     alias Equalizer = Void*
     alias Log = Void
+
+    # Media option flags from libvlc_media.h
+    MEDIA_OPTION_TRUSTED =   0x2
+    MEDIA_OPTION_UNIQUE  = 0x100
 
     # Enums
     enum State
@@ -320,6 +337,20 @@ module VLC
       i_bitrate : LibC::UInt
       psz_language : LibC::Char*
       psz_description : LibC::Char*
+    end
+
+    # Corresponds to libvlc_media_track_info_t
+    struct MediaTrackInfo
+      i_codec : UInt32
+      i_id : LibC::Int
+      i_type : TrackType
+      i_profile : LibC::Int
+      i_level : LibC::Int
+      # union of audio/video specific info
+      u_audio_channels : LibC::UInt
+      u_audio_rate : LibC::UInt
+      u_video_height : LibC::UInt
+      u_video_width : LibC::UInt
     end
 
     struct ModuleDescription
